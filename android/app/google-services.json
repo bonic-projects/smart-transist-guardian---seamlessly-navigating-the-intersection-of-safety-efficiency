@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "516044434722",
+    "project_id": "smart-transist-guardian",
+    "storage_bucket": "smart-transist-guardian.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:516044434722:android:fa80739899a2551538497b",
+        "android_client_info": {
+          "package_name": "com.example.smart_transist_guardian"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBpcZubY4c61E_BHuQlgVhOeqdTYIigDvM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
