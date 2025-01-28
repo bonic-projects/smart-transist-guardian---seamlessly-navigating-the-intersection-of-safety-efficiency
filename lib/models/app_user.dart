@@ -2,41 +2,50 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AppUser {
   final String id;
+  final String fullName;
   final String email;
   final String userRole;
-  final String fullName;
-  final String? photoUrl;
   final DateTime regTime;
+  final String photoUrl;
+  final String? status; // For Emergency Vehicle role
+  final Map<String, dynamic>? assignedAccident; // For Emergency Vehicle role
 
   AppUser({
     required this.id,
+    required this.fullName,
     required this.email,
     required this.userRole,
-    required this.fullName,
-    this.photoUrl,
     required this.regTime,
+    required this.photoUrl,
+    this.status,
+    this.assignedAccident,
   });
 
-  // Convert a Firestore document to an AppUser
-  factory AppUser.fromJson(Map<String, dynamic> json, String documentId) {
+  factory AppUser.fromJson(Map<String, dynamic> json) {
     return AppUser(
-      id: documentId,
-      email: json['email'] ?? '',
-      userRole: json['userRole'] ?? '',
-      fullName: json['fullName'] ?? '',
+      id: json['id'],
+      fullName: json['fullName'],
+      email: json['email'],
+      userRole: json['userRole'],
+      regTime: (json['regTime'] is String)
+          ? DateTime.parse(json['regTime'])
+          : (json['regTime'] as Timestamp).toDate(),
       photoUrl: json['photoUrl'],
-      regTime: (json['regTime'] as Timestamp).toDate(),
+      status: json['status'], // For Emergency Vehicle
+      assignedAccident: json['assignedAccident'], // For Emergency Vehicle
     );
   }
 
-  // Convert an AppUser to a Firestore document
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
+      'fullName': fullName,
       'email': email,
       'userRole': userRole,
-      'fullName': fullName,
+      'regTime': regTime.toIso8601String(),
       'photoUrl': photoUrl,
-      'regTime': regTime,
+      'status': status, // For Emergency Vehicle
+      'assignedAccident': assignedAccident, // For Emergency Vehicle
     };
   }
 }

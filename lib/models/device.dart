@@ -14,7 +14,7 @@ class DeviceReading {
   factory DeviceReading.fromMap(Map<String, dynamic> data) {
     return DeviceReading(
       accident:
-          AccidentData.fromMap(Map<String, dynamic>.from(data['accident'])),
+      AccidentData.fromMap(Map<String, dynamic>.from(data['accident'])),
       gate1: GateData.fromMap(Map<String, dynamic>.from(data['gate-1'])),
       gate2: GateData.fromMap(Map<String, dynamic>.from(data['gate-2'])),
       traffic: data['traffic'] ?? 'unknown',
@@ -83,3 +83,33 @@ class DeviceData {
     };
   }
 }
+class AssignedAccident {
+  final double latitude;
+  final double longitude;
+  final String status;
+
+  AssignedAccident({
+    required this.latitude,
+    required this.longitude,
+    required this.status,
+  });
+
+  // Factory method to create an instance from Firestore data
+  factory AssignedAccident.fromMap(Map<String, dynamic> map) {
+    return AssignedAccident(
+      latitude: map['latitude'] as double,
+      longitude: map['longitude'] as double,
+      status: map['status'] as String,
+    );
+  }
+
+  // Method to convert the object back to a map (useful for updates)
+  Map<String, dynamic> toMap() {
+    return {
+      'latitude': latitude,
+      'longitude': longitude,
+      'status': status,
+    };
+  }
+}
+

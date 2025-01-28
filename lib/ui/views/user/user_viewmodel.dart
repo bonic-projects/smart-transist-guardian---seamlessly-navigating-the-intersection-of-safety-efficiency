@@ -95,17 +95,67 @@ class UserViewModel extends BaseViewModel {
   // Fetch new route to the destination
   Future<List<LatLng>> getRouteToDestination() async {
     if (currentLocation == null || destinationLocation == null) {
+      print("Current or Destination location is null");
       return [];
     }
 
-    // Here you can add logic to fetch route data using an API like Google Directions API.
-    // For now, we simulate a route between the current location and the destination.
-    await Future.delayed(Duration(seconds: 2)); // Simulating network delay
-    return [
-      currentLocation!,
-      destinationLocation!, // Destination Location
-    ];
+    const String apiKey = 'AIzaSyDrLw2JhRLRX6hYF6HyoYZkLtY4XVPGoPQ'; // Replace with actual API key
+    final String url =
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLocation!.latitude},${currentLocation!.longitude}&destination=${destinationLocation!.latitude},${destinationLocation!.longitude}&key=$apiKey';
+
+    print("Fetching route from: $url");
+
+    final response = await http.get(Uri.parse(url));
+    print("Response status: ${response.statusCode}");
+    print("Response body: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+
+      if (data['routes'].isNotEmpty) {
+        final polyline = data['routes'][0]['overview_polyline']['points'];
+        return _decodePolyline(polyline);
+      } else {
+        print("No routes found: ${data['status']}");
+        return [];
+      }
+    } else {
+      throw Exception('Failed to fetch route from Directions API');
+    }
   }
+
+
+// Decode encoded polyline to a list of LatLng
+  List<LatLng> _decodePolyline(String encoded) {
+    List<LatLng> polyline = [];
+    int index = 0, len = encoded.length;
+    int lat = 0, lng = 0;
+
+    while (index < len) {
+      int b, shift = 0, result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+
+      polyline.add(LatLng(lat / 1E5, lng / 1E5));
+    }
+    return polyline;
+  }
+
 
   // Fetch route to the accident location
   Future<List<LatLng>> getRouteToAccident() async {
@@ -126,7 +176,7 @@ class UserViewModel extends BaseViewModel {
   void updatePolylines(List<LatLng> route) {
     polylines = {
       Polyline(
-        polylineId: PolylineId('route_to_accident'),
+        polylineId: PolylineId('route'),
         points: route,
         color: Colors.blue,
         width: 5,
@@ -134,6 +184,7 @@ class UserViewModel extends BaseViewModel {
     };
     notifyListeners();
   }
+
 
   // Play accident alert sound
   void playAccidentAlertSound() async {
@@ -185,25 +236,44 @@ class UserViewModel extends BaseViewModel {
 
   // Handle place selection
   Future<void> selectPlace(String placeDescription) async {
-    // Print the selected place description
-    print("Selected Place: $placeDescription");
+    try {
+      // Print the selected place description
+      print("Selected Place: $placeDescription");
 
-    // Placeholder: Fetch more details (like coordinates) of the selected place
-    // For now, we're simulating a place's coordinates
-    destinationLocation = await _getPlaceCoordinates(placeDescription);
+      // Fetch the coordinates of the selected place
+      destinationLocation = await _getPlaceCoordinates(placeDescription);
 
-    // Update the destinationController with the selected place's description
-    destinationController.text = placeDescription;
+      // Log the fetched coordinates for debugging
+      print("Fetched Coordinates: $destinationLocation");
 
-    // Notify listeners that the destination has been updated
-    notifyListeners();
+      // Update the destinationController with the selected place's description
+      destinationController.text = placeDescription;
+
+      // Notify listeners that the destination has been updated
+      notifyListeners();
+    } catch (e) {
+      print("Error selecting place: $e");
+    }
   }
+
 
   // Placeholder function to get coordinates of a place
   Future<LatLng> _getPlaceCoordinates(String placeDescription) async {
-    // Simulate getting coordinates (replace with actual API calls)
-    return LatLng(12.9716, 77.5946); // Example coordinates (Bengaluru)
+    const String apiKey = 'AIzaSyDrLw2JhRLRX6hYF6HyoYZkLtY4XVPGoPQ'; // Replace with your API key
+    final String url =
+        'https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=$placeDescription&inputtype=textquery&fields=geometry&key=$apiKey';
+
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final location = data['candidates'][0]['geometry']['location'];
+      return LatLng(location['lat'], location['lng']);
+    } else {
+      throw Exception('Failed to fetch place coordinates');
+    }
   }
+
 
   // New method to update the destination controller text
   void updateDestinationController(String suggestion) {
@@ -235,4 +305,29 @@ class UserViewModel extends BaseViewModel {
     }
     return false;
   }
+  void clearRoute() {
+    polylines.clear();
+    notifyListeners();
+  }
+
+  Future<void> fetchAndUpdateRoute(LatLng destination) async {
+    // Clear existing route
+    clearRoute();
+
+    // Set the destination
+    destinationLocation = destination;
+
+    // Fetch new route
+    if (currentLocation == null || destinationLocation == null) {
+      return;
+    }
+
+    // Simulate route fetching logic (replace with actual API logic if needed)
+    await Future.delayed(Duration(seconds: 2)); // Simulate network delay
+    List<LatLng> route = [currentLocation!, destinationLocation!];
+
+    // Update polylines with the new route
+    updatePolylines(route);
+  }
+
 }

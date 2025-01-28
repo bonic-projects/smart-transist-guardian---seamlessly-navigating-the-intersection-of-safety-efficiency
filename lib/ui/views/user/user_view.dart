@@ -17,15 +17,22 @@ class UserView extends StatelessWidget {
               "User View",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 20,
+                fontSize: 24,
                 color: Colors.white,
               ),
             ),
-            backgroundColor: Colors.blueAccent,
+            backgroundColor: Colors.blue[900], // Consistent primary color
             elevation: 0,
+            actions: [
+              IconButton(
+                onPressed: viewModel.logout,
+                icon: Icon(Icons.logout, color: Colors.white),
+              ),
+            ],
           ),
           body: Column(
             children: [
+              // Input Section
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -44,48 +51,91 @@ class UserView extends StatelessWidget {
                           onTap: () {
                             viewModel.fetchCurrentLocation();
                           },
-                          child: Icon(Icons.location_searching),
+                          child: Icon(Icons.location_searching, color: Colors.blue[900]),
                         ),
-                        border: OutlineInputBorder(),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: Colors.blue[900]!),
+                        ),
                         contentPadding: EdgeInsets.all(12),
                       ),
                     ),
                     SizedBox(height: 16),
 
                     // Destination Location TextField with TypeAheadField
-                    TypeAheadField<String>(
-                      controller: viewModel.destinationController,
-                      suggestionsCallback: (pattern) async {
-                        return await viewModel.fetchPlaceSuggestions(pattern);
-                      },
-                      itemBuilder: (context, suggestion) {
-                        return ListTile(
-                          title: Text(suggestion),
-                        );
-                      },
-                      onSelected: (suggestion) {
-                        // Update the selected suggestion in the ViewModel
-                        viewModel.selectPlace(suggestion);
-                      },
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.blue[900]!),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: TypeAheadField<String>(
+                          controller: viewModel.destinationController,
+                          suggestionsCallback: (pattern) async {
+                            return await viewModel.fetchPlaceSuggestions(pattern);
+                          },
+                          itemBuilder: (context, suggestion) {
+                            return ListTile(
+                              title: Text(suggestion),
+                            );
+                          },
+                          onSelected: (suggestion) {
+                            viewModel.selectPlace(suggestion);
+                          },
+                          builder: (context, controller, focusNode) {
+                            return TextField(
+                              controller: controller,
+                              focusNode: focusNode,
+                              decoration: InputDecoration(
+                                labelText: 'Destination',
+                                border: InputBorder.none, // Remove the default border
+                                contentPadding: EdgeInsets.all(12),
+                                prefixIcon: Icon(Icons.location_on, color: Colors.blue[900]),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
                     ),
                     SizedBox(height: 16),
 
                     // Fetch Route Button
                     ElevatedButton(
                       onPressed: () async {
+                        if (viewModel.destinationLocation == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Please select a destination first!'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
+
                         var route = await viewModel.getRouteToDestination();
+                        viewModel.clearRoute();
                         viewModel.updatePolylines(route);
+
                         if (viewModel.isAccidentOnRoute(route)) {
-                          // Show warning and play sound if route goes through accident location
-                          // viewModel.showAccidentWarning(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Warning: Accident detected on your route!'),
+                              backgroundColor: Colors.orange,
+                            ),
+                          );
                         }
                       },
-                      child: Text('Fetch Route'),
+                      child: Text(
+                        'Fetch Route',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        padding:
-                            EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                        textStyle: TextStyle(fontSize: 18),
+                        backgroundColor: Colors.blue[900], // Consistent primary color
+                        padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
                   ],
@@ -95,131 +145,125 @@ class UserView extends StatelessWidget {
               // Accident Data Section
               viewModel.isAccident
                   ? Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            // Map for Accident Location
-                            Container(
-                              height: 300,
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.only(
-                                  bottomLeft: Radius.circular(20),
-                                  bottomRight: Radius.circular(20),
-                                ),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.only(
-                                  bottomLeft: Radius.circular(20),
-                                  bottomRight: Radius.circular(20),
-                                ),
-                                child: GoogleMap(
-                                  initialCameraPosition: CameraPosition(
-                                    target: LatLng(
-                                      viewModel.deviceData?.accident.latitude ??
-                                          0.0,
-                                      viewModel
-                                              .deviceData?.accident.longitude ??
-                                          0.0,
-                                    ),
-                                    zoom: 14,
-                                  ),
-                                  markers: {
-                                    Marker(
-                                      markerId: MarkerId("accident_location"),
-                                      position: LatLng(
-                                          viewModel.deviceData?.accident
-                                                  .latitude ??
-                                              0.0,
-                                          viewModel.deviceData?.accident
-                                                  .longitude ??
-                                              0.0),
-                                      infoWindow: InfoWindow(
-                                        title: 'Accident Location',
-                                        snippet: 'Accident occurred here',
-                                      ),
-                                    ),
-                                  },
-                                  polylines: viewModel.polylines,
-                                  myLocationEnabled: true,
-                                  myLocationButtonEnabled: true,
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 20),
-
-                            // Accident Data Card
-                            _buildDataCard(
-                              title: 'Accident Details',
-                              icon: Icons.local_offer,
-                              children: [
-                                _buildDataRow(
-                                  'Latitude:',
-                                  viewModel.deviceData?.accident.latitude
-                                          .toString() ??
-                                      'N/A',
-                                ),
-                                _buildDataRow(
-                                  'Longitude:',
-                                  viewModel.deviceData?.accident.longitude
-                                          .toString() ??
-                                      'N/A',
-                                ),
-                              ],
-                            ),
-
-                            // Gate Status Card
-                            _buildDataCard(
-                              title: 'Gate Status',
-                              icon: Icons.door_front_door,
-                              children: [
-                                _buildDataRow(
-                                  'Gate 1 Status:',
-                                  viewModel.deviceData?.gate1.status ?? 'N/A',
-                                ),
-                                _buildDataRow(
-                                  'Gate 2 Status:',
-                                  viewModel.deviceData?.gate2.status ?? 'N/A',
-                                ),
-                                _buildDataRow(
-                                  'Gate 2 Traffic:',
-                                  viewModel.deviceData?.gate2.traffic ??
-                                      'Unknown',
-                                ),
-                                _buildDataRow(
-                                  'Gate 2 Remaining Time:',
-                                  viewModel.deviceData?.gate2.remainingTime
-                                          .toString() ??
-                                      'N/A',
-                                ),
-                              ],
-                            ),
-
-                            // Traffic Status Card
-                            _buildDataCard(
-                              title: 'Traffic Information',
-                              icon: Icons.traffic,
-                              children: [
-                                _buildDataRow(
-                                  'Traffic Status:',
-                                  viewModel.deviceData?.traffic ?? 'Unknown',
-                                ),
-                              ],
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Map for Accident Location
+                      Container(
+                        height: 300,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(20),
+                            bottomRight: Radius.circular(20),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 10,
+                              offset: Offset(0, 5),
                             ),
                           ],
                         ),
-                      ),
-                    )
-                  : Center(
-                      child: Text(
-                        "No accident detected",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.redAccent,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(20),
+                            bottomRight: Radius.circular(20),
+                          ),
+                          child: GoogleMap(
+                            initialCameraPosition: CameraPosition(
+                              target: LatLng(
+                                viewModel.deviceData?.accident.latitude ?? 0.0,
+                                viewModel.deviceData?.accident.longitude ?? 0.0,
+                              ),
+                              zoom: 14,
+                            ),
+                            markers: {
+                              Marker(
+                                markerId: MarkerId("accident_location"),
+                                position: LatLng(
+                                  viewModel.deviceData?.accident.latitude ?? 0.0,
+                                  viewModel.deviceData?.accident.longitude ?? 0.0,
+                                ),
+                                infoWindow: InfoWindow(
+                                  title: 'Accident Location',
+                                  snippet: 'Accident occurred here',
+                                ),
+                              ),
+                            },
+                            polylines: viewModel.polylines,
+                            myLocationEnabled: true,
+                            myLocationButtonEnabled: true,
+                          ),
                         ),
                       ),
-                    ),
+                      SizedBox(height: 20),
+
+                      // Accident Data Card
+                      _buildDataCard(
+                        title: 'Accident Details',
+                        icon: Icons.local_offer,
+                        children: [
+                          _buildDataRow(
+                            'Latitude:',
+                            viewModel.deviceData?.accident.latitude.toString() ?? 'N/A',
+                          ),
+                          _buildDataRow(
+                            'Longitude:',
+                            viewModel.deviceData?.accident.longitude.toString() ?? 'N/A',
+                          ),
+                        ],
+                      ),
+
+                      // Gate Status Card
+                      _buildDataCard(
+                        title: 'Gate Status',
+                        icon: Icons.door_front_door,
+                        children: [
+                          _buildDataRow(
+                            'Gate 1 Status:',
+                            viewModel.deviceData?.gate1.status ?? 'N/A',
+                          ),
+                          _buildDataRow(
+                            'Gate 2 Status:',
+                            viewModel.deviceData?.gate2.status ?? 'N/A',
+                          ),
+                          _buildDataRow(
+                            'Gate 2 Traffic:',
+                            viewModel.deviceData?.gate2.traffic ?? 'Unknown',
+                          ),
+                          _buildDataRow(
+                            'Gate 2 Remaining Time:',
+                            viewModel.deviceData?.gate2.remainingTime.toString() ?? 'N/A',
+                          ),
+                        ],
+                      ),
+
+                      // Traffic Status Card
+                      _buildDataCard(
+                        title: 'Traffic Information',
+                        icon: Icons.traffic,
+                        children: [
+                          _buildDataRow(
+                            'Traffic Status:',
+                            viewModel.deviceData?.traffic ?? 'Unknown',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              )
+                  : Center(
+                child: Text(
+                  "No accident detected",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.redAccent,
+                  ),
+                ),
+              ),
             ],
           ),
         );
@@ -240,6 +284,7 @@ class UserView extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15),
         ),
+        color: Colors.white,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -247,19 +292,19 @@ class UserView extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(icon, color: Colors.blueAccent),
+                  Icon(icon, color: Colors.blue[900]), // Consistent primary color
                   SizedBox(width: 8),
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: Colors.blue[900], // Consistent primary color
                     ),
                   ),
                 ],
               ),
-              Divider(color: Colors.grey),
+              Divider(color: Colors.grey[300]),
               ...children,
             ],
           ),
@@ -271,7 +316,7 @@ class UserView extends StatelessWidget {
   // Helper method to build a row of data inside the card
   Widget _buildDataRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

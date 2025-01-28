@@ -21,7 +21,7 @@ class FirestoreService {
     try {
       DocumentSnapshot doc = await _usersCollection.doc(userId).get();
       if (doc.exists) {
-        return AppUser.fromJson(doc.data() as Map<String, dynamic>, doc.id);
+        return AppUser.fromJson(doc.data() as Map<String, dynamic>);
       }
     } catch (e) {
       print("Error fetching user: $e");
@@ -38,7 +38,7 @@ class FirestoreService {
 
       // Map each document to AppUser model
       return snapshot.docs.map((doc) {
-        return AppUser.fromJson(doc.data() as Map<String, dynamic>, doc.id);
+        return AppUser.fromJson(doc.data() as Map<String, dynamic>);
       }).toList();
     } catch (e) {
       print("Error fetching users with role $role: $e");

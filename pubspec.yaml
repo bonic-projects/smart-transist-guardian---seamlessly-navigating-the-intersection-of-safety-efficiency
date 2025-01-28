@@ -18,19 +18,21 @@ dependencies:
   flutter_carousel_widget: ^3.1.0
   flutter_google_places_sdk: 0.3.2+1
   flutter_launcher_icons: ^0.14.1
-  flutter_local_notifications: ^18.0.1
+#  flutter_local_notifications: ^13.0.0
   flutter_typeahead: ^5.2.0
   geocoding: ^3.0.0
   geolocator: ^13.0.2
   google_maps_flutter: ^2.10.0
   google_maps_services_dart: ^1.17.1
   http: ^1.2.2
+  just_audio: ^0.9.43
   location: ^7.0.1
   logger: ^2.4.0
   permission_handler: ^11.3.1
   stacked: ^3.4.0
   stacked_firebase_auth: ^2.21.0
   stacked_services: ^1.1.0
+  url_launcher: ^6.3.1
 
 dev_dependencies: null
 
@@ -49,4 +51,6 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   assets:
-    - assets/
+    - assets/alert.mp3
+    - assets/logo.png
+

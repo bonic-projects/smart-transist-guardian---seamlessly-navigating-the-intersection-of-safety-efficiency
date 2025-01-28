@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:smart_transist_guardian/app/app.locator.dart';
 import 'package:smart_transist_guardian/app/app.logger.dart';
 import 'package:smart_transist_guardian/app/app.router.dart';
@@ -31,7 +32,7 @@ class RegisterViewModel extends FormViewModel {
       try {
         // Attempt to create the user with email and password
         FirebaseAuthenticationResult result =
-            await _firebaseAuthenticationService.createAccountWithEmail(
+        await _firebaseAuthenticationService.createAccountWithEmail(
           email: emailValue!,
           password: passwordValue!,
         );
@@ -39,15 +40,29 @@ class RegisterViewModel extends FormViewModel {
         if (result.user != null) {
           log.i("User successfully created with UID: ${result.user!.uid}");
 
-          // Create or update user profile in Firestore
-          String? error = await _userService.createUpdateUser(AppUser(
-            id: result.user!.uid,
-            fullName: nameValue!,
-            email: result.user!.email!,
-            userRole: userRoleValue!, // Ensure the correct role is set
-            regTime: DateTime.now(),
-            photoUrl: "", // Add a default or placeholder URL if needed
-          ));
+          // Prepare the user data
+          Map<String, dynamic> userData = {
+            'id': result.user!.uid,
+            'fullName': nameValue!,
+            'email': result.user!.email!,
+            'userRole': userRoleValue!,
+            'regTime':  Timestamp.now(),
+            'photoUrl': "", // Add a default or placeholder URL if needed
+          };
+
+          // Add additional fields for Emergency Vehicle role
+          if (userRoleValue == "Emergency Vehicle") {
+            userData['status'] = 'available'; // Default status
+            userData['assignedAccident'] = {
+              'latitude': null,
+              'longitude': null,
+              'status': '',
+              'timestamp': null,
+            };
+          }
+
+          // Save user data to Firestore
+          String? error = await _userService.createUpdateUser(AppUser.fromJson(userData));
 
           if (error == null) {
             log.i("User profile successfully saved to Firestore.");
@@ -79,7 +94,7 @@ class RegisterViewModel extends FormViewModel {
         } else {
           _snackBarService.showSnackbar(
             message:
-                result.errorMessage ?? "Registration failed. Please try again.",
+            result.errorMessage ?? "Registration failed. Please try again.",
           );
         }
       } catch (e) {
@@ -94,6 +109,7 @@ class RegisterViewModel extends FormViewModel {
           message: "Please fill in all required fields.");
     }
   }
+
 
   @override
   void setFormStatus() {

@@ -21,7 +21,7 @@ class StartupView extends StackedView<StartupViewModel> {
           children: [
             Text(
               'Smart Transist Guardian',
-              style: TextStyle(fontSize: 40, fontWeight: FontWeight.w900),
+              style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900),
             ),
             Row(
               mainAxisSize: MainAxisSize.min,
