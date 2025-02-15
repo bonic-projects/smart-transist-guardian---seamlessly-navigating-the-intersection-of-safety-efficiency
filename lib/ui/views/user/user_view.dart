@@ -143,79 +143,84 @@ class UserView extends StatelessWidget {
               ),
 
               // Accident Data Section
-              viewModel.isAccident
-                  ? Expanded(
+              Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      // Map for Accident Location
-                      Container(
-                        height: 300,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(20),
-                            bottomRight: Radius.circular(20),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 10,
-                              offset: Offset(0, 5),
+                      // Accident Details Section (Only shown if accident occurs)
+                      if (viewModel.isAccident)
+                        Column(
+                          children: [
+                            // Map for Accident Location
+                            Container(
+                              height: 300,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.only(
+                                  bottomLeft: Radius.circular(20),
+                                  bottomRight: Radius.circular(20),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black26,
+                                    blurRadius: 10,
+                                    offset: Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.only(
+                                  bottomLeft: Radius.circular(20),
+                                  bottomRight: Radius.circular(20),
+                                ),
+                                child: GoogleMap(
+                                  initialCameraPosition: CameraPosition(
+                                    target: LatLng(
+                                      viewModel.deviceData?.accident.latitude ?? 0.0,
+                                      viewModel.deviceData?.accident.longitude ?? 0.0,
+                                    ),
+                                    zoom: 14,
+                                  ),
+                                  markers: {
+                                    Marker(
+                                      markerId: MarkerId("accident_location"),
+                                      position: LatLng(
+                                        viewModel.deviceData?.accident.latitude ?? 0.0,
+                                        viewModel.deviceData?.accident.longitude ?? 0.0,
+                                      ),
+                                      infoWindow: InfoWindow(
+                                        title: 'Accident Location',
+                                        snippet: 'Accident occurred here',
+                                      ),
+                                    ),
+                                  },
+                                  polylines: viewModel.polylines,
+                                  myLocationEnabled: true,
+                                  myLocationButtonEnabled: true,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 20),
+
+                            // Accident Data Card
+                            _buildDataCard(
+                              title: 'Accident Details',
+                              icon: Icons.local_offer,
+                              children: [
+                                _buildDataRow(
+                                  'Latitude:',
+                                  viewModel.deviceData?.accident.latitude.toString() ?? 'N/A',
+                                ),
+                                _buildDataRow(
+                                  'Longitude:',
+                                  viewModel.deviceData?.accident.longitude.toString() ?? 'N/A',
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(20),
-                            bottomRight: Radius.circular(20),
-                          ),
-                          child: GoogleMap(
-                            initialCameraPosition: CameraPosition(
-                              target: LatLng(
-                                viewModel.deviceData?.accident.latitude ?? 0.0,
-                                viewModel.deviceData?.accident.longitude ?? 0.0,
-                              ),
-                              zoom: 14,
-                            ),
-                            markers: {
-                              Marker(
-                                markerId: MarkerId("accident_location"),
-                                position: LatLng(
-                                  viewModel.deviceData?.accident.latitude ?? 0.0,
-                                  viewModel.deviceData?.accident.longitude ?? 0.0,
-                                ),
-                                infoWindow: InfoWindow(
-                                  title: 'Accident Location',
-                                  snippet: 'Accident occurred here',
-                                ),
-                              ),
-                            },
-                            polylines: viewModel.polylines,
-                            myLocationEnabled: true,
-                            myLocationButtonEnabled: true,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 20),
 
-                      // Accident Data Card
-                      _buildDataCard(
-                        title: 'Accident Details',
-                        icon: Icons.local_offer,
-                        children: [
-                          _buildDataRow(
-                            'Latitude:',
-                            viewModel.deviceData?.accident.latitude.toString() ?? 'N/A',
-                          ),
-                          _buildDataRow(
-                            'Longitude:',
-                            viewModel.deviceData?.accident.longitude.toString() ?? 'N/A',
-                          ),
-                        ],
-                      ),
-
-                      // Gate Status Card
+                      // Gate Status Card (Always shown)
                       _buildDataCard(
                         title: 'Gate Status',
                         icon: Icons.door_front_door,
@@ -239,7 +244,7 @@ class UserView extends StatelessWidget {
                         ],
                       ),
 
-                      // Traffic Status Card
+                      // Traffic Status Card (Always shown)
                       _buildDataCard(
                         title: 'Traffic Information',
                         icon: Icons.traffic,
@@ -251,16 +256,6 @@ class UserView extends StatelessWidget {
                         ],
                       ),
                     ],
-                  ),
-                ),
-              )
-                  : Center(
-                child: Text(
-                  "No accident detected",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.redAccent,
                   ),
                 ),
               ),

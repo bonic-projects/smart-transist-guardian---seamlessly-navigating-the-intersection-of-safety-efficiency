@@ -1,0 +1,2 @@
+C:/Users/hp/smart-transist-guardian/software/android/app/.cxx/RelWithDebInfo/6m3g315k/x86/CMakeFiles/edit_cache.dir
+C:/Users/hp/smart-transist-guardian/software/android/app/.cxx/RelWithDebInfo/6m3g315k/x86/CMakeFiles/rebuild_cache.dir

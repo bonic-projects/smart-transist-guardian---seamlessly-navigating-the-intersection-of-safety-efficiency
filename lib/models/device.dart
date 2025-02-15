@@ -13,15 +13,16 @@ class DeviceReading {
 
   factory DeviceReading.fromMap(Map<String, dynamic> data) {
     return DeviceReading(
-      accident:
-      AccidentData.fromMap(Map<String, dynamic>.from(data['accident'])),
+      accident: AccidentData.fromMap(Map<String, dynamic>.from(data['accident'])),
       gate1: GateData.fromMap(Map<String, dynamic>.from(data['gate-1'])),
       gate2: GateData.fromMap(Map<String, dynamic>.from(data['gate-2'])),
       traffic: data['traffic'] ?? 'unknown',
     );
   }
 
-  toJson() {}
+  toJson() {
+    // Implement this method if needed
+  }
 }
 
 class AccidentData {
@@ -38,8 +39,8 @@ class AccidentData {
   factory AccidentData.fromMap(Map<String, dynamic> data) {
     return AccidentData(
       isAccident: data['Accident'] ?? false,
-      latitude: data['latitude'] ?? 0.0,
-      longitude: data['longitude'] ?? 0.0,
+      latitude: (data['latitude'] as num).toDouble(), // Convert to double
+      longitude: (data['longitude'] as num).toDouble(), // Convert to double
     );
   }
 }

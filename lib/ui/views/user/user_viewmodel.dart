@@ -189,7 +189,7 @@ class UserViewModel extends BaseViewModel {
   // Play accident alert sound
   void playAccidentAlertSound() async {
     await _audioPlayer.play(
-        AssetSource('assets/accident_alert.mp3')); // Your sound asset file
+        AssetSource('alert.mp3')); // Your sound asset file
   }
 
   // Handle logout logic
